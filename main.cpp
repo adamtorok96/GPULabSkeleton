@@ -46,20 +46,23 @@ void onInitialization()
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
-    shader.loadShader(GL_VERTEX_SHADER, "../shaders/tess.vert");
-    shader.loadShader(GL_TESS_CONTROL_SHADER, "../shaders/tess.tc");
-    shader.loadShader(GL_TESS_EVALUATION_SHADER, "../shaders/tess.te");
-    shader.loadShader(GL_FRAGMENT_SHADER, "../shaders/tess.frag");
+    shader.loadShader(GL_VERTEX_SHADER, "../shaders/vertex.glsl");
+    shader.loadShader(GL_TESS_CONTROL_SHADER, "../shaders/tess_control.glsl");
+    shader.loadShader(GL_TESS_EVALUATION_SHADER, "../shaders/tess_evaluation.glsl");
+    shader.loadShader(GL_FRAGMENT_SHADER, "../shaders/fragment.glsl");
     shader.compile();
 
     // Single triangle patch Vertex Array Object
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
+
     glGenBuffers(1, &vertexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 9, vertices, GL_STATIC_DRAW);
+
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
     glBindVertexArray(0);
 }
@@ -77,8 +80,10 @@ void onDisplay()
     shader.setUniformMat4("MV", MV);
     shader.setUniform1i("tessLevelInner", tessLevelInner);
     shader.setUniform1i("tessLevelOuter", tessLevelOuter);
+
     glBindVertexArray(vao);
     glDrawArrays(GL_PATCHES, 0, 3);
+
     glBindVertexArray(0);
     shader.disable();
 
@@ -107,6 +112,8 @@ void onKeyboard(unsigned char key, int pX, int pY) {
         case 'm':
             tessLevelOuter = std::min(64, tessLevelOuter + 1);
             break;
+
+        default:break;
     }
 }
 
@@ -125,14 +132,18 @@ int main(int argc, char* argv[])
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
     glutCreateWindow(argv[0]);
     glewExperimental = GL_TRUE;
+
     glewInit();
 
     printf("GL Vendor    : %s\n", glGetString(GL_VENDOR));
     printf("GL Renderer  : %s\n", glGetString(GL_RENDERER));
     printf("GL Version (string)  : %s\n", glGetString(GL_VERSION));
+
     GLint major, minor;
+
     glGetIntegerv(GL_MAJOR_VERSION, &major);
     glGetIntegerv(GL_MINOR_VERSION, &minor);
+
     printf("GL Version (integer) : %d.%d\n", major, minor);
     printf("GLSL Version : %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
