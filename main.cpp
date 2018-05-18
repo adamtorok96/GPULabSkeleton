@@ -16,18 +16,35 @@ const unsigned int windowWidth = 600;
 const unsigned int windowHeight = 600;
 
 Shader shader;
+Shader pointsShader;
 
 GLuint vao;
 GLuint vertexBuffer;
 
-int tessLevelInner = 1;
-int tessLevelOuter = 1;
+class CPoint {
+    float x, y;
 
-const float vertices[9] = {
-        0.0f, 0.0f, 1.0f,
-        0.5f, 1.0f, 1.0f,
-        1.0f, 0.0f, 1.0f,
+public:
+
+    CPoint(float x, float y) : x{x}, y{y} {};
 };
+
+std::vector<CPoint> points;
+
+#define PPV 2
+#define nVertex 4
+
+const float vertices[PPV * nVertex] = {
+        0.0f, 0.0f,
+        0.5f, 0.9f,
+        0.9f, 0.0f,
+        0.5f, 0.5f,
+};
+
+void loadPoints() {
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * PPV * points.size(), &points[0], GL_STATIC_DRAW);
+}
 
 void onInitialization()
 {
@@ -47,22 +64,26 @@ void onInitialization()
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
     shader.loadShader(GL_VERTEX_SHADER, "../shaders/vertex.glsl");
-    shader.loadShader(GL_TESS_CONTROL_SHADER, "../shaders/tess_control.glsl");
-    shader.loadShader(GL_TESS_EVALUATION_SHADER, "../shaders/tess_evaluation.glsl");
+    shader.loadShader(GL_GEOMETRY_SHADER, "../shaders/geometry.glsl");
+    //shader.loadShader(GL_TESS_CONTROL_SHADER, "../shaders/tess_control.glsl");
+    //shader.loadShader(GL_TESS_EVALUATION_SHADER, "../shaders/tess_evaluation.glsl");
     shader.loadShader(GL_FRAGMENT_SHADER, "../shaders/fragment.glsl");
     shader.compile();
+
+    pointsShader.loadShader(GL_VERTEX_SHADER, "../shaders/points.vertex.glsl");
+    pointsShader.loadShader(GL_FRAGMENT_SHADER, "../shaders/points.fragment.glsl");
+    pointsShader.compile();
 
     // Single triangle patch Vertex Array Object
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
     glGenBuffers(1, &vertexBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 9, vertices, GL_STATIC_DRAW);
+    loadPoints();
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glVertexAttribPointer(0, PPV, GL_FLOAT, GL_FALSE, 0, nullptr);
 
     glBindVertexArray(0);
 }
@@ -75,17 +96,29 @@ void onDisplay()
 
     glPatchParameteri(GL_PATCH_VERTICES, 3);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glPointSize(5.0f);
+
+    glBindVertexArray(vao);
+
+    // Draw lines
 
     shader.enable();
     shader.setUniformMat4("MV", MV);
-    shader.setUniform1i("tessLevelInner", tessLevelInner);
-    shader.setUniform1i("tessLevelOuter", tessLevelOuter);
 
-    glBindVertexArray(vao);
-    glDrawArrays(GL_PATCHES, 0, 3);
+    glDrawArrays(GL_LINE_STRIP_ADJACENCY, 0, static_cast<GLsizei>(points.size()));
+
+    shader.disable();
+
+    // Draw points
+    pointsShader.enable();
+    pointsShader.setUniformMat4("MV", MV);
+
+    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(points.size()));
+
+    pointsShader.disable();
 
     glBindVertexArray(0);
-    shader.disable();
+
 
     glutSwapBuffers();
 }
@@ -93,27 +126,22 @@ void onDisplay()
 void onKeyboard(unsigned char key, int pX, int pY) {
     switch (key)
     {
-        case 27:
-            glutExit();
-            break;
-
-        case 'g':
-            tessLevelInner = std::max(1, tessLevelInner - 1);
-            break;
-
-        case 'h':
-            tessLevelInner = std::min(64, tessLevelInner + 1);
-            break;
-
-        case 'n':
-            tessLevelOuter = std::max(1, tessLevelOuter - 1);
-            break;
-
-        case 'm':
-            tessLevelOuter = std::min(64, tessLevelOuter + 1);
-            break;
+        case 27: glutExit(); break;
 
         default:break;
+    }
+}
+
+void onMouse(int button, int state, int x, int y) {
+    if ( button == GLUT_LEFT_BUTTON && state == GLUT_DOWN ) {
+        float cX = x / 600.0f;
+        float cY = 1.0f - (y / 600.0f);
+
+        printf("%f %f\n", cX, cY);
+
+        points.emplace_back(cX, cY);
+
+        loadPoints();
     }
 }
 
@@ -150,6 +178,7 @@ int main(int argc, char* argv[])
     onInitialization();
     glutDisplayFunc(onDisplay);
     glutKeyboardFunc(onKeyboard);
+    glutMouseFunc(onMouse);
     glutIdleFunc(onIdle);
     glutMainLoop();
 
