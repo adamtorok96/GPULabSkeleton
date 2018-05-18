@@ -3,9 +3,8 @@
 layout (lines_adjacency) in;
 layout (line_strip, max_vertices = 200) out;
 
-
 float GetT(float t, vec2 p0, vec2 p1) {
-    float a = pow((p1.x-p0.x), 2.0f) + pow((p1.y-p0.y), 2.0f);
+    float a = pow((p1.x - p0.x), 2.0f) + pow((p1.y - p0.y), 2.0f);
     float b = pow(a, 0.5f);
     float c = pow(b, 0.5f);
 
