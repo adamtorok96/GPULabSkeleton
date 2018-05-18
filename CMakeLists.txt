@@ -18,7 +18,7 @@ include_directories({$OPENGL_INCLUDE_DIRS})
 include_directories({$GLEW_INCLUDE_DIRS})
 include_directories({$GLUT_INCLUDE_DIRS})
 
-set(SOURCE_FILES main.cpp shader.cpp shader.hpp)
+set(SOURCE_FILES main.cpp shader.cpp shader.hpp BSP/BSP.cpp BSP/BSP.h BSP/BSPHeader.cpp BSP/BSPHeader.h BSP/BSPLump.cpp BSP/BSPLump.h BSP/BSPVertex.cpp BSP/BSPVertex.h BSP/BSPFace.cpp BSP/BSPFace.h)
 set(EXE Tesseleration)
 add_executable(${EXE} ${SOURCE_FILES})
 

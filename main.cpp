@@ -6,31 +6,14 @@
 #include <algorithm>
 
 #include "shader.hpp"
+#include "BSP/BSP.h"
 
 
 const unsigned int windowWidth = 600;
 const unsigned int windowHeight = 600;
 
-unsigned int offset = 0;
-
 Shader shader;
-
-GLuint vao;
-GLuint vertexBuffer;
-
-#define PPV 2
-#define nVertices 4
-
-#define A 0.0f
-#define B 1.0f
-
-float vertices[PPV * nVertices] = {
-        A, A,
-        B, A,
-        B, B,
-        A, B,
-  //      0.2f, 0.2f,
-};
+BSP bsp;
 
 void onInitialization()
 {
@@ -50,19 +33,7 @@ void onInitialization()
     shader.loadShader(GL_FRAGMENT_SHADER, "../shaders/fragment.glsl");
     shader.compile();
 
-    // Single triangle patch Vertex Array Object
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
-    glGenBuffers(1, &vertexBuffer);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * PPV * nVertices, &vertices, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, PPV, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-    glBindVertexArray(0);
+    bsp.load("../maps/q3dmp15.bsp");
 }
 
 void onDisplay()
@@ -71,19 +42,12 @@ void onDisplay()
 
     glm::mat4 MV = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f);
 
-    //glPatchParameteri(GL_PATCH_VERTICES, 4);
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    //glPointSize(5.0f);
 
     shader.enable();
     shader.setUniformMat4("MV", MV);
-    shader.setUniform1i("mOffset", offset);
 
-    glBindVertexArray(vao);
-
-    glDrawArrays(GL_TRIANGLE_FAN, 0, nVertices);
-
-    glBindVertexArray(0);
+    bsp.draw();
 
     shader.disable();
 
@@ -105,8 +69,6 @@ void onMouse(int button, int state, int x, int y) {
 void onIdle()
 {
     glutPostRedisplay();
-
-    offset++;
 }
 
 int main(int argc, char* argv[])
