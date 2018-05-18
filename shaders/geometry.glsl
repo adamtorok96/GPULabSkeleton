@@ -6,9 +6,29 @@ layout (line_strip, max_vertices = 200) out;
 float GetT(float t, vec2 p0, vec2 p1) {
     float a = pow((p1.x - p0.x), 2.0f) + pow((p1.y - p0.y), 2.0f);
     float b = pow(a, 0.5f);
-    float c = pow(b, 0.5f);
+    float c = pow(b, 0.9f);
 
     return (c + t);
+}
+
+vec2 getPos(float t) {
+    float s = 0.5f;
+
+    vec4 a = vec4(pow(t, 3), t * t, t, 1);
+
+    mat4 b;
+    b[0] = vec4(-s, 2 - s, s - 2, s);
+    b[1] = vec4(2 * s, s - 3, 3 - 2 * s, -s);
+    b[2] = vec4(-s, 0, s, 0);
+    b[3] = vec4(0, 1, 0, 0);
+
+    mat4 c;
+    c[0] = vec4(gl_in[0].gl_Position.xy, 0.0f, 1.0f);
+    c[1] = vec4(gl_in[1].gl_Position.xy, 0.0f, 1.0f);
+    c[2] = vec4(gl_in[2].gl_Position.xy, 0.0f, 1.0f);
+    c[3] = vec4(gl_in[3].gl_Position.xy, 0.0f, 1.0f);
+
+    return (a * b * c).xy;
 }
 
 void main (void) {
