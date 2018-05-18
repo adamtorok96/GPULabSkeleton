@@ -1,6 +1,3 @@
-// Skeleton.cpp : Defines the entry point for the console application.
-//
-
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -9,8 +6,7 @@
 #include <algorithm>
 
 #include "shader.hpp"
-//#include "texture.hpp"
-//#include "DebugOpenGL.hpp"
+
 
 const unsigned int windowWidth = 600;
 const unsigned int windowHeight = 600;
@@ -32,14 +28,6 @@ public:
 std::vector<CPoint> points;
 
 #define PPV 2
-#define nVertex 4
-
-const float vertices[PPV * nVertex] = {
-        0.0f, 0.0f,
-        0.5f, 0.9f,
-        0.9f, 0.0f,
-        0.5f, 0.5f,
-};
 
 void loadPoints() {
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
@@ -58,15 +46,10 @@ void onInitialization()
 
     glGetError();
 
-    //DebugOpenGL::init();
-    //DebugOpenGL::enableLowSeverityMessages(false);
-
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
     shader.loadShader(GL_VERTEX_SHADER, "../shaders/vertex.glsl");
     shader.loadShader(GL_GEOMETRY_SHADER, "../shaders/geometry.glsl");
-    //shader.loadShader(GL_TESS_CONTROL_SHADER, "../shaders/tess_control.glsl");
-    //shader.loadShader(GL_TESS_EVALUATION_SHADER, "../shaders/tess_evaluation.glsl");
     shader.loadShader(GL_FRAGMENT_SHADER, "../shaders/fragment.glsl");
     shader.compile();
 
@@ -94,14 +77,13 @@ void onDisplay()
 
     glm::mat4 MV = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f);
 
-    glPatchParameteri(GL_PATCH_VERTICES, 3);
+    glPatchParameteri(GL_PATCH_VERTICES, 4);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glPointSize(5.0f);
 
     glBindVertexArray(vao);
 
     // Draw lines
-
     shader.enable();
     shader.setUniformMat4("MV", MV);
 
@@ -119,7 +101,6 @@ void onDisplay()
 
     glBindVertexArray(0);
 
-
     glutSwapBuffers();
 }
 
@@ -134,12 +115,7 @@ void onKeyboard(unsigned char key, int pX, int pY) {
 
 void onMouse(int button, int state, int x, int y) {
     if ( button == GLUT_LEFT_BUTTON && state == GLUT_DOWN ) {
-        float cX = x / 600.0f;
-        float cY = 1.0f - (y / 600.0f);
-
-        printf("%f %f\n", cX, cY);
-
-        points.emplace_back(cX, cY);
+        points.emplace_back(x / 600.0f, 1.0f - (y / 600.0f));
 
         loadPoints();
     }

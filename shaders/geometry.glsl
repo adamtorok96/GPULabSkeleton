@@ -1,77 +1,34 @@
 #version 330
 
-// 4 vertices per-primitive -- 2 for the line (1,2) and 2 for adjacency (0,3)
 layout (lines_adjacency) in;
+layout (line_strip, max_vertices = 200) out;
 
-// Standard fare for drawing lines
-layout (line_strip, max_vertices = 6) out;
 
-float L(int i, float t) {
-    float Li = 1.0f;
+float GetT(float t, vec2 p0, vec2 p1) {
+    float a = pow((p1.x-p0.x), 2.0f) + pow((p1.y-p0.y), 2.0f);
+    float b = pow(a, 0.5f);
+    float c = pow(b, 0.5f);
 
-    for(int j = 0; j < 3; j++) {
-        if (j != i)
-            Li *= (t - (j+1.0f)) / ((i+1.0f) - (j+1.0f));
-    }
-
-    return Li;
-}
-
-vec4 r(float t) {
-    vec4 v;
-
-    for(int i = 0; i < 3; i++) {
-        v += gl_in[i].gl_Position * L(i, t);
-    }
-
-    return v;
+    return (c + t);
 }
 
 void main (void) {
-  // The two vertices adjacent to the line that you are currently processing
-  //vec4 prev_vtx = gl_in[0].gl_Position;
-  //vec4 next_vtx = gl_in[3].gl_Position;
+    float t0 = 0.0f;
+    float t1 = GetT(t0, gl_in[0].gl_Position.xy, gl_in[1].gl_Position.xy);
+    float t2 = GetT(t1, gl_in[1].gl_Position.xy, gl_in[2].gl_Position.xy);
+    float t3 = GetT(t2, gl_in[2].gl_Position.xy, gl_in[3].gl_Position.xy);
 
+    for(float t = t1; t < t2; t += ((t2 - t1) / 10.0f)) {
+        vec2 A1 = (t1-t) / (t1-t0) * gl_in[0].gl_Position.xy + (t-t0) / (t1-t0) * gl_in[1].gl_Position.xy;
+        vec2 A2 = (t2-t) / (t2-t1) * gl_in[1].gl_Position.xy + (t-t1) / (t2-t1) * gl_in[2].gl_Position.xy;
+        vec2 A3 = (t3-t) / (t3-t2) * gl_in[2].gl_Position.xy + (t-t2) / (t3-t2) * gl_in[3].gl_Position.xy;
 
-    for(float i = 0.0f; i < 3.0f; i += 0.5f) {
-        gl_Position = r(i);
+        vec2 B1 = (t2-t) / (t2-t0) * A1 + (t-t0) / (t2-t0) * A2;
+        vec2 B2 = (t3-t) / (t3-t1) * A2 + (t-t1) / (t3-t1) * A3;
+
+        vec2 C = (t2-t) / (t2-t1) * B1 + (t-t1) / (t2-t1) * B2;
+
+        gl_Position = vec4(C, 0.0f, 1.0f);
         EmitVertex();
     }
-
-/*
-    gl_Position = gl_in[0].gl_Position;
-    EmitVertex();
-
-    gl_Position = gl_in[1].gl_Position; // First vertex in the line
-    EmitVertex();
-
-/*
-     vec4 v = 0.5f * (
-            (gl_in[2].gl_Position - gl_in[1].gl_Position) +
-            (gl_in[1].gl_Position - gl_in[0].gl_Position)
-        );
-
-        gl_Position = normalize(v);
-        EmitVertex();
-*/
-    /*gl_Position = gl_in[2].gl_Position; // Second vertex in the line
-    EmitVertex();
-
-    gl_Position = gl_in[3].gl_Position; // Second vertex in the line
-    EmitVertex();
-    */
-
-
-/*
-    vec4 v = 0.5f * (
-        (gl_in[2].gl_Position - gl_in[1].gl_Position) +
-        (gl_in[1].gl_Position - gl_in[0].gl_Position)
-    );
-
-    gl_Position = v;
-    EmitVertex();
-
-    gl_Position = v;
-    EmitVertex();
-*/
 }
