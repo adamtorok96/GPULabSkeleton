@@ -21,11 +21,14 @@ GLuint vertexBuffer;
 #define PPV 2
 #define nVertices 4
 
+#define A 0.0f
+#define B 1.0f
+
 float vertices[PPV * nVertices] = {
-        0.2f, 0.2f,
-        0.8f, 0.2f,
-        0.8f, 0.8f,
-        0.2f, 0.8f,
+        A, A,
+        B, A,
+        B, B,
+        A, B,
   //      0.2f, 0.2f,
 };
 
