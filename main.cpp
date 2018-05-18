@@ -11,28 +11,23 @@
 const unsigned int windowWidth = 600;
 const unsigned int windowHeight = 600;
 
+unsigned int offset = 0;
+
 Shader shader;
-Shader pointsShader;
 
 GLuint vao;
 GLuint vertexBuffer;
 
-class CPoint {
-    float x, y;
-
-public:
-
-    CPoint(float x, float y) : x{x}, y{y} {};
-};
-
-std::vector<CPoint> points;
-
 #define PPV 2
+#define nVertices 4
 
-void loadPoints() {
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * PPV * points.size(), &points[0], GL_STATIC_DRAW);
-}
+float vertices[PPV * nVertices] = {
+        0.2f, 0.2f,
+        0.8f, 0.2f,
+        0.8f, 0.8f,
+        0.2f, 0.8f,
+  //      0.2f, 0.2f,
+};
 
 void onInitialization()
 {
@@ -49,13 +44,8 @@ void onInitialization()
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
     shader.loadShader(GL_VERTEX_SHADER, "../shaders/vertex.glsl");
-    shader.loadShader(GL_GEOMETRY_SHADER, "../shaders/geometry.glsl");
     shader.loadShader(GL_FRAGMENT_SHADER, "../shaders/fragment.glsl");
     shader.compile();
-
-    pointsShader.loadShader(GL_VERTEX_SHADER, "../shaders/points.vertex.glsl");
-    pointsShader.loadShader(GL_FRAGMENT_SHADER, "../shaders/points.fragment.glsl");
-    pointsShader.compile();
 
     // Single triangle patch Vertex Array Object
     glGenVertexArrays(1, &vao);
@@ -63,7 +53,8 @@ void onInitialization()
 
     glGenBuffers(1, &vertexBuffer);
 
-    loadPoints();
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * PPV * nVertices, &vertices, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, PPV, GL_FLOAT, GL_FALSE, 0, nullptr);
@@ -77,29 +68,21 @@ void onDisplay()
 
     glm::mat4 MV = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f);
 
-    glPatchParameteri(GL_PATCH_VERTICES, 4);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glPointSize(5.0f);
+    //glPatchParameteri(GL_PATCH_VERTICES, 4);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //glPointSize(5.0f);
+
+    shader.enable();
+    shader.setUniformMat4("MV", MV);
+    shader.setUniform1i("mOffset", offset);
 
     glBindVertexArray(vao);
 
-    // Draw lines
-    shader.enable();
-    shader.setUniformMat4("MV", MV);
-
-    glDrawArrays(GL_LINE_STRIP_ADJACENCY, 0, static_cast<GLsizei>(points.size()));
-
-    shader.disable();
-
-    // Draw points
-    pointsShader.enable();
-    pointsShader.setUniformMat4("MV", MV);
-
-    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(points.size()));
-
-    pointsShader.disable();
+    glDrawArrays(GL_TRIANGLE_FAN, 0, nVertices);
 
     glBindVertexArray(0);
+
+    shader.disable();
 
     glutSwapBuffers();
 }
@@ -114,16 +97,13 @@ void onKeyboard(unsigned char key, int pX, int pY) {
 }
 
 void onMouse(int button, int state, int x, int y) {
-    if ( button == GLUT_LEFT_BUTTON && state == GLUT_DOWN ) {
-        points.emplace_back(x / 600.0f, 1.0f - (y / 600.0f));
-
-        loadPoints();
-    }
 }
 
 void onIdle()
 {
     glutPostRedisplay();
+
+    offset++;
 }
 
 int main(int argc, char* argv[])
@@ -138,6 +118,7 @@ int main(int argc, char* argv[])
     glewExperimental = GL_TRUE;
 
     glewInit();
+
 
     printf("GL Vendor    : %s\n", glGetString(GL_VENDOR));
     printf("GL Renderer  : %s\n", glGetString(GL_RENDERER));

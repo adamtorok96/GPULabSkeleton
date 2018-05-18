@@ -6,5 +6,5 @@ in vec2 pos;
 
 void main()
 {
-	gl_Position = MV * vec4(pos, 1.0f, 1.0f);
+	gl_Position = MV * vec4(pos, 0.0f, 1.0f);
 }
